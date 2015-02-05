@@ -1,4 +1,4 @@
-# opentracker
+# Opentracker Compile
 Shell script for compiling latest [opentracker](https://erdgeist.org/arts/software/opentracker/) from source.
 
 ## Install
@@ -8,7 +8,7 @@ git clone https://github.com/Fleshgrinder/opentracker-compile.git
 sh opentracker-compile/compile.sh
 ```
 
-## Usge
+## Usage
 A [Linux Standard Base (LSB)](http://www.linuxfoundation.org/collaborate/workgroups/lsb) compliant [SysVinit]
 (http://freecode.com/projects/sysvinit) script is included and automatically installed in `/etc/init.d` for you. It 
 also adds the tracker to the start-up of your server (if you do not want that, issue `update-rc.d opentracker remove` 
