@@ -40,32 +40,126 @@
 # -----------------------------------------------------------------------------
 # Opentracker Linux Standards Base compliant init script.
 #
-# Exit status codes of this script and their meaning:
-#
-#    0 = Command succeeded.
-#   64 = Super user only.
-#   65 = Service binary not installed/found.
-#   66 = Incorrect usage.
-#
-# In some cases the exit code from another command is returned, please refer to
-# the documentation of that specific command for information on their meaning.
-#
-# SEE:        https://wiki.debian.org/LSBInitScripts
-# SEE:        http://paste.ubuntu.com/6918156/
+# SEE: https://wiki.debian.org/LSBInitScripts
+# SEE: http://paste.ubuntu.com/6918156/
+# SEE: http://tldp.org/LDP/abs/html/exitcodes.html
 #
 # AUTHOR:     Richard Fussenegger <richard@fussenegger.info>
 # COPYRIGHT:  Copyright (c) 2015 Richard Fussenegger
 # LICENSE:    http://unlicense.org/ PD
 # -----------------------------------------------------------------------------
 
+
+# -----------------------------------------------------------------------------
+#                                                                     Variables
+# -----------------------------------------------------------------------------
+
+
 # The service's name.
-readonly NAME='opentracker'
+readonly NAME=opentracker
 
 # The service's deamon arguments.
 readonly DAEMON_ARGS='-f /etc/opentracker/opentracker.conf'
 
 # The service's PID file.
-readonly PIDFILE='/run/opentracker.pid'
+readonly PIDFILE=/run/opentracker.pid
+
+# Will be set by /lib/init/vars.sh
+VERBOSE=no
+
+
+# -----------------------------------------------------------------------------
+#                                                                   Error Codes
+# -----------------------------------------------------------------------------
+
+
+readonly EC_SUPER_USER_ONLY=64
+readonly EC_DAEMON_NOT_FOUND=65
+readonly EC_RELOADING_FAILED=66
+readonly EC_RESTART_STOP_FAILED=67
+readonly EC_RESTART_START_FAILED=68
+readonly EC_START_FAILED=69
+readonly EC_STOP_FAILED=70
+readonly EC_INVALID_ARGUMENT=71
+
+
+# -----------------------------------------------------------------------------
+#                                                                     Functions
+# -----------------------------------------------------------------------------
+
+
+# Exit the script with an error code.
+die()
+{
+    log_end_msg ${1}
+    exit ${1}
+}
+
+# End the script.
+end()
+{
+    [ "${VERBOSE}" != no ] && log_end_msg 0 || exit 0
+}
+
+# Display failure message.
+fail()
+{
+    log_failure_msg "${NAME}" "${1}"
+}
+
+# Display informational message.
+info()
+{
+    [ "${VERBOSE}" != no ] && log_daemon_msg "${NAME}" "${1}"
+}
+
+# Display success message.
+ok()
+{
+    [ "${VERBOSE}" != no ] && log_success_msg "${NAME}" "${1}"
+}
+
+###
+# Reloads the service.
+#
+# RETURN:
+#   0 - successfully reloaded
+#   1 - reloading failed
+###
+reload_service()
+{
+    start-stop-daemon --stop --signal HUP ${SSD_OPTIONS}
+}
+
+###
+# Starts the service.
+#
+# RETURN:
+#   0 - successfully started
+#   1 - starting failed
+###
+start_service()
+{
+    start-stop-daemon --start ${SSD_OPTIONS} -- ${DAEMON_ARGS}
+}
+
+###
+# Stops the service.
+#
+# RETURN:
+#   0 - successfully stopped
+#   1 - stopping failed
+###
+stop_service()
+{
+    start-stop-daemon --stop --retry=TERM/30/KILL/5 ${SSD_OPTIONS}
+}
+
+
+# -----------------------------------------------------------------------------
+#                                                                      Includes
+# -----------------------------------------------------------------------------
+
 
 # Load the VERBOSE setting and other rcS variables.
 . /lib/init/vars.sh
@@ -73,79 +167,97 @@ readonly PIDFILE='/run/opentracker.pid'
 # Load LSB functions.
 . /lib/lsb/init-functions
 
-# Make sure the script is only executed by super users.
+
+# -----------------------------------------------------------------------------
+#                                                                     Bootstrap
+# -----------------------------------------------------------------------------
+
+
+# This script is only accessible for root (sudo).
 if [ $(id -u) -ne 0 ]
 then
-    [ "${VERBOSE}" != no ] && log_failure_msg "${NAME}" 'super user only!'
-    exit 64
+    fail 'super user only!'
+    exit ${EC_SUPER_USER_ONLY}
 fi
 
-# Determine the service daemon's absolute path.
-DAEMON=$(type "${NAME}")
-if [ ${?} -ne 0 ]
+# Check if daemon is a recognized program and get absolute path.
+readonly DAEMON=$(command -v "${NAME}")
+if [ "${DAEMON}" = '' ]
 then
-    [ "${VERBOSE}" != no ] && log_failure_msg "${NAME}" 'not installed'
-    exit 65
+    fail 'not found!'
+    exit ${EC_DAEMON_NOT_FOUND}
 fi
-DAEMON="${DAEMON##* }"
+
+# Default options for start-stop-daemon command.
+readonly SSD_OPTIONS="--quiet --oknodo --pidfile ${PIDFILE} --exec ${DAEMON} --name ${NAME}"
 
 # Determine the service's status.
 #
-#   0 = Program is running.
+#   0 = Program is running
 #   1 = Program is not running and the PID file exists.
-#   3 = Program is not running.
+#   3 = Porgram is not running.
 #   4 = Unable to determine status.
-readonly STATUS=$(start-stop-daemon --status --quiet --pidfile "${PIDFILE}" --exec "${DAEMON}")
+start-stop-daemon --status ${SSD_OPTIONS} 2>/dev/null 1>/dev/null
+readonly STATUS=${?}
 
-# Default options for start-stop-daemon command.
-readonly START_STOP_DAEMON_ARGS="--quiet --oknodo --pidfil ${PIDFILE} --exec ${DAEMON} --name ${NAME}"
 
-# Handle passed arguments.
+# -----------------------------------------------------------------------------
+#                                                                  Handle Input
+# -----------------------------------------------------------------------------
+
+
 case "${1}" in
 
-    force-reload|restart)
-        if [ "${STATUS}" = 0 ]
+    force-reload|reload)
+        if [ ${STATUS} -eq 0 ]
         then
-            [ "${VERBOSE}" != no ] && log_daemon_msg "${NAME}" 'reloading configuration'
-            start-stop-daemon --stop --signal HUP ${START_STOP_DAEMON_ARGS}
-            [ "${VERBOSE}" != no ] && log_end_msg ${?} || exit ${?}
+            info 'reloading configuration ...'
+            reload_service && end || die ${EC_RELOADING_FAILED}
         else
-            [ "${VERBOSE}" != no ] && log_failure_msg "${NAME}" 'not running'
+            fail 'not running!'
+        fi
+    ;;
+
+    restart)
+        if [ ${STATUS} -eq 0 ]
+        then
+            info 'restarting service ...'
+            stop_service || die ${EC_RESTART_STOP_FAILED}
+            sleep 0.1
+            start_service && end || die ${EC_RESTART_START_FAILED}
+        else
+            fail 'not running!'
         fi
     ;;
 
     start)
-        if [ "${STATUS}" = 0 ]
+        if [ ${STATUS} -eq 0 ]
         then
-            [ "${VERBOSE}" != no ] && log_success_msg "${NAME}" 'already running'
+            ok 'already started.'
         else
-            [ "${VERBOSE}" != no ] && log_daemon_msg "${NAME}" 'starting'
-            start-stop-daemon --start --oknodo --background --make-pidfile ${START_STOP_DAEMON_ARGS} -- ${DAEMON_ARGS}
-            [ "${VERBOSE}" != no ] && log_end_msg ${?} || exit ${?}
+            info 'starting ...'
+            start_service && end || die ${EC_START_FAILED}
         fi
     ;;
 
     status)
-        status_of_proc "${DAEMON}" "${NAME}" && exit 0 || exit ${?}
+        status_of_proc "${DAEMON}" "${NAME}" || exit ${?}
     ;;
 
     stop)
-        if [ "${STATUS}" = 0 ]
+        if [ ${STATUS} -eq 0 ]
         then
-            [ "${VERBOSE}" != no ] && log_daemon_msg "${NAME}" 'stopping'
-            start-stop-daemon --stop --retry=TERM/30/KILL/5 ${START_STOP_DAEMON_ARGS}
-            [ "${VERBOSE}" != no ] && log_end_msg ${?} || exit ${?}
+            info 'stopping ...'
+            stop_service && end || die ${EC_STOP_FAILED}
         else
-            if [ -e "${PIDFILE}" ]
-                then rm --force -- "${PIDFILE}"
-            fi
-            [ "${VERBOSE}" != no ] && log_success_msg "${NAME}" 'already stopped'
+            info 'already stopped.'
         fi
     ;;
 
     *)
-        printf -- 'Usage: %s {force-reload|restart|start|status|stop}\n' "/etc/init.d/${NAME}" >&2
-        exit 66
+        printf -- 'Usage: %s {force-reload|reload|restart|start|status|stop}\n' \
+            $(cd -- "$(dirname -- "${0}")"; pwd)/$(basename -- "${0}") >&2
+        exit ${EC_INVALID_ARGUMENT}
     ;;
 
 esac

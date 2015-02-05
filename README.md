@@ -20,6 +20,7 @@ type `service opentracker res` just hit tab for auto-completion.
 
 ```shell
 service opentracker force-reload
+service opentracker reload
 service opentracker restart
 service opentracker start
 service opentracker status

@@ -78,7 +78,7 @@ Compile and install opentracker from source.
   -h  Display this help and exit.
 
 Report bugs to richard@fussenegger.info
-GitHub repository: https://github.com/Fleshgrinder/opentracker
+GitHub repository: https://github.com/Fleshgrinder/opentracker-compile
 For complete documentation, see: README.md
 EOT
 }
@@ -119,7 +119,7 @@ if [ ! -d "${SOURCE_DIRECTORY}/libowfat" ]
 then
     rm --recursive --force -- "${SOURCE_DIRECTORY}/libowfat"
     wget "http://dl.fefe.de/libowfat-${LIBOWFAT_VERSION}.tar.bz2"
-    tar --bzip2 --extract --verbose --file="${SOURCE_DIRECTORY}/libowfat-${LIBOWFAT_VERSION}.tar.bz2"
+    tar --bzip2 --extract --file="${SOURCE_DIRECTORY}/libowfat-${LIBOWFAT_VERSION}.tar.bz2"
     rm --force -- "${SOURCE_DIRECTORY}/libowfat-${LIBOWFAT_VERSION}.tar.bz2"
     ln --symbolic -- "${SOURCE_DIRECTORY}/libowfat-${LIBOWFAT_VERSION}" "${SOURCE_DIRECTORY}/libowfat"
     chown --recursive -- root:root "${SOURCE_DIRECTORY}/libowfat"
