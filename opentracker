@@ -140,7 +140,7 @@ reload_service()
 ###
 start_service()
 {
-    start-stop-daemon --start ${SSD_OPTIONS} -- ${DAEMON_ARGS}
+    start-stop-daemon --start --background --make-pidfile ${SSD_OPTIONS} -- ${DAEMON_ARGS}
 }
 
 ###
