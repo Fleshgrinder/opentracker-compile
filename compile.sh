@@ -47,7 +47,7 @@ set -e
 readonly LIBOWFAT_VERSION='0.29'
 
 # Desired opentracker features, consult the documentation for more information.
-readonly FEATURES='-DWANT_FULLSCRAPE -DWANT_RESTRICT_STATS -DWANT_SYSLOGS'
+readonly OPENTRACKER_FEATURES='-DWANT_FULLSCRAPE -DWANT_RESTRICT_STATS -DWANT_SYSLOGS'
 
 # The absolute path to the opentracker configuration directory.
 readonly CONFIGURATION_DIRECTORY='/etc/opentracker'
@@ -146,7 +146,7 @@ then
     ARCH='-m64'
 fi
 
-CFLAGS="${ARCH} -march=native" FEATURES="${FEATURES}" make
+CFLAGS="${ARCH} -march=native" FEATURES="${OPENTRACKER_FEATURES}" make
 
 mkdir --parents -- "${CONFIGURATION_DIRECTORY}"
 
