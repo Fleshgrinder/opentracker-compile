@@ -46,6 +46,9 @@ set -e
 # The version string of the nginx release that should be installed.
 readonly LIBOWFAT_VERSION='0.29'
 
+# Desired opentracker features, consult the documentation for more information.
+readonly FEATURES='-DWANT_FULLSCRAPE -DWANT_RESTRICT_STATS -DWANT_SYSLOGS'
+
 # The absolute path to the opentracker configuration directory.
 readonly CONFIGURATION_DIRECTORY='/etc/opentracker'
 
@@ -137,7 +140,13 @@ else
     cd -- "${SOURCE_DIRECTORY}/opentracker"
 fi
 
-CFLAGS='-m64 -march=native' FEATURES='-DWANT_FULLSCRAPE -DWANT_RESTRICT_STATS -DWANT_SYSLOGS' make
+ARCH=
+if [ $(uname -m) = 'x86_x64' ]
+then
+    ARCH='-m64'
+fi
+
+CFLAGS="${ARCH} -march=native" FEATURES="${FEATURES}" make
 
 mkdir --parents -- "${CONFIGURATION_DIRECTORY}"
 
