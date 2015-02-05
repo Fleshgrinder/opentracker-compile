@@ -111,7 +111,7 @@ printf -- 'Updating package sources ...\n'
 apt-get -- update 1>/dev/null
 
 printf -- 'Installing build dependencies ...\n'
-apt-get --yes -- install build-essential git bzip2
+apt-get --yes -- install build-essential git bzip2 zlib1g-dev
 
 cd -- "${SOURCE_DIRECTORY}"
 
