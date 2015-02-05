@@ -150,7 +150,7 @@ then
 fi
 
 set +e
-service opentracker stop 2>/dev/null
+service opentracker stop 2>/dev/null 1>/dev/null
 set -e
 
 BINDIR="${INSTALL_DIRECTORY}" make install

@@ -91,7 +91,7 @@ readonly EC_INVALID_ARGUMENT=71
 # Exit the script with an error code.
 die()
 {
-    log_end_msg ${1}
+    log_end_msg ${1} >&2
     exit ${1}
 }
 
@@ -104,7 +104,7 @@ end()
 # Display failure message.
 fail()
 {
-    log_failure_msg "${NAME}" "${1}"
+    log_failure_msg "${NAME}" "${1}" >&2
 }
 
 # Display informational message.
