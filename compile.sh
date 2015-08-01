@@ -136,7 +136,7 @@ then
     git pull
 else
     rm --recursive --force -- "${SOURCE_DIRECTORY}/opentracker"
-    git clone --depth 1 --single-branch -- "git://erdgeist.org/opentracker" "${SOURCE_DIRECTORY}/opentracker"
+    git clone --depth 1 -- "git://erdgeist.org/opentracker" "${SOURCE_DIRECTORY}/opentracker"
     cd -- "${SOURCE_DIRECTORY}/opentracker"
 fi
 
