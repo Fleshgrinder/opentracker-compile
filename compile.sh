@@ -110,11 +110,20 @@ fi
 
 printf -- 'Installing opentracker with libowfat %s ...\n' "${YELLOW}${LIBOWFAT_VERSION}${NORMAL}"
 
-printf -- 'Updating package sources ...\n'
-apt-get -- update 1>/dev/null
 
-printf -- 'Installing build dependencies ...\n'
-apt-get --yes -- install build-essential git bzip2 zlib1g-dev
+if command -v apt-get >/dev/null
+then
+    printf -- 'Updating package sources ...\n'
+    apt-get -- update 1>/dev/null
+    printf -- 'Installing build dependencies ...\n'
+    apt-get --yes -- install build-essential git bzip2 zlib1g-dev
+elseif command -v yum >/dev/null
+    printf -- 'Installing build dependencies ...\n'
+    yum --assumeyes -- groupinstall 'Development Tools'
+    yum --assumeyes -- install git bzip2 zlib-dev
+else
+    printf -- 'Could not determine package manager, continuing without dependency installation ...\n'
+fi
 
 cd -- "${SOURCE_DIRECTORY}"
 
