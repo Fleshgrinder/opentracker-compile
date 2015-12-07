@@ -117,7 +117,8 @@ then
     apt-get -- update 1>/dev/null
     printf -- 'Installing build dependencies ...\n'
     apt-get --yes -- install build-essential git bzip2 zlib1g-dev
-elseif command -v yum >/dev/null
+elif command -v yum >/dev/null
+then
     printf -- 'Installing build dependencies ...\n'
     yum --assumeyes -- groupinstall 'Development Tools'
     yum --assumeyes -- install git bzip2 zlib-dev
